@@ -54,6 +54,7 @@ if st.button("Deep Analysis 실행"):
                 pbr = info.get('priceToBook') or 0
                 roe = (info.get('returnOnEquity') or 0) * 100
                 
+                # 기술 지표 계산
                 df['RSI'] = ta.rsi(df['Close'], length=14)
                 bbands = ta.bbands(df['Close'], length=20, std=2)
                 df = pd.concat([df, bbands], axis=1)
@@ -78,18 +79,24 @@ if st.button("Deep Analysis 실행"):
                 m4.metric("ROE (수익성)", f"{round(roe, 1)}%")
                 m5.metric("상승여력", f"{round(upside, 1)}%")
 
-                # 차트 섹션
+                # 차트 섹션 (범례 이름 수정 반영)
                 st.subheader("📊 기술적 분석 차트")
                 fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.05, row_heights=[0.7, 0.3])
+                
+                # 1단: 캔들 & 볼린저 밴드 (범례 이름 한글화)
                 fig.add_trace(go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'], name='주가'), row=1, col=1)
-                fig.add_trace(go.Scatter(x=df.index, y=df['BBU_20_2.0'], line=dict(color='rgba(200, 200, 200, 0.5)'), name='Upper BB'), row=1, col=1)
-                fig.add_trace(go.Scatter(x=df.index, y=df['BBL_20_2.0'], line=dict(color='rgba(200, 200, 200, 0.5)'), fill='tonexty', name='Lower BB'), row=1, col=1)
+                fig.add_trace(go.Scatter(x=df.index, y=df['BBU_20_2.0'], line=dict(color='rgba(200, 200, 200, 0.5)'), name='상단 밴드'), row=1, col=1)
+                fig.add_trace(go.Scatter(x=df.index, y=df['BBL_20_2.0'], line=dict(color='rgba(200, 200, 200, 0.5)'), fill='tonexty', name='하단 밴드'), row=1, col=1)
+                
+                # 2단: RSI
                 fig.add_trace(go.Scatter(x=df.index, y=df['RSI'], line=dict(color='orange'), name='RSI'), row=2, col=1)
                 fig.add_hline(y=70, line_dash="dash", line_color="red", row=2, col=1)
                 fig.add_hline(y=30, line_dash="dash", line_color="green", row=2, col=1)
+                
                 fig.update_layout(height=600, xaxis_rangeslider_visible=False, margin=dict(l=10, r=10, t=10, b=10))
                 st.plotly_chart(fig, use_container_width=True)
 
+                # 상세 분석 섹션
                 col_left, col_right = st.columns(2)
                 with col_left:
                     st.subheader("💡 투자 가이드라인")
@@ -102,6 +109,7 @@ if st.button("Deep Analysis 실행"):
                     st.write(f"📢 **추천 등급:** {recommendation}")
                     st.write(f"🎯 **의견:** 현재가 대비 {round(upside, 1)}% 상승 전망")
 
+                # 뉴스 섹션
                 st.subheader("📰 최신 뉴스")
                 if stock.news:
                     for n in stock.news[:5]:
